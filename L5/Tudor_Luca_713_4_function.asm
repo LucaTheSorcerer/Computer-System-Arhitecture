@@ -2,7 +2,7 @@ bits 32 ; assembling for the 32 bits architecture
 
 ; declare the EntryPoint (a label defining the very first instruction of the program)
         
-global operation
+global operation ;wir machen operation global, so dass man diese Funktion in andere Dateien benutzen kann
 ; declare external functions needed by our program
 extern exit, scanf, printf            ; tell nasm that exit exists even if we won't be defining it
 import exit msvcrt.dll
