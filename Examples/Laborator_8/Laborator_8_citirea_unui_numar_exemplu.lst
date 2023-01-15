@@ -1,0 +1,43 @@
+     1                                  ;Codul de mai jos va afisa mesajul "n=", apoi va citi de la tastatura valoarea numarului n.
+     2                                  bits 32 ; assembling for the 32 bits architecture
+     3                                  
+     4                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     5                                  global start        
+     6                                  
+     7                                  ; declare external functions needed by our program
+     8                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     9                                  extern printf
+    10                                  extern scanf
+    11                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    12                                  import printf msvcrt.dll
+    13                                  import scanf msvcrt.dll
+    14                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    15                                  
+    16                                  ; our data is declared here (the variables needed by our program)
+    17                                  segment data use32 class=data
+    18                                      ; ...
+    19 00000000 00000000                    n dd 0 ;in aceasta variabila se va stoca valoarea citita de la tastatura
+    20                                             ;sirurile de caractere sunt de tip byte
+    21 00000004 6E203D2000                  message db "n = ", 0 ;sirurile de caractere pentru functiile C trebuie sa se termine cu valoarea 0 (nu caracterul)
+    22 00000009 256400                      format db "%d", 0 ;%d <=> un numar decimal (baza 10)
+    23                                  
+    24                                  ; our code starts here
+    25                                  segment code use32 class=code
+    26                                      start:
+    27                                          ; ...
+    28                                          ;vom apela functia printf(message) => se va afisa "n = "
+    29                                          ;punem parametrii pe stiva
+    30 00000000 68[04000000]                    push dword message
+    31 00000005 FF15[00000000]                  call [printf]
+    32 0000000B 83C404                          add esp, 4 * 1
+    33                                          
+    34                                          ;vom apela functia scanf(format, n) => se va citi un numar in variabila n
+    35                                          ;punem parametrii pe stiva de la dreapta la stanga
+    36 0000000E 68[00000000]                    push dword n
+    37 00000013 68[09000000]                    push dword format
+    38 00000018 FF15[00000000]                  call [scanf]
+    39 0000001E 83C408                          add esp, 4 * 2
+    40                                      
+    41                                          ; exit(0)
+    42 00000021 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    43 00000023 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

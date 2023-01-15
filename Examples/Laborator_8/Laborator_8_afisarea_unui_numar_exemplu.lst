@@ -1,0 +1,46 @@
+     1                                  ;Codul de mai jos va afisa mesajul "Ana are 17 mere"
+     2                                  bits 32 ; assembling for the 32 bits architecture
+     3                                  
+     4                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     5                                  global start        
+     6                                  
+     7                                  ; declare external functions needed by our program
+     8                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     9                                  extern printf
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    13                                  
+    14                                  ; our data is declared here (the variables needed by our program)
+    15                                  segment data use32 class=data
+    16                                      ; ...
+    17 00000000 416E61206172652025-         format db "Ana are %d mere", 0 ;%d va fi inlocuit cu un numar
+    17 00000009 64206D65726500     
+    18                                                                     ; sirurile de caractere pt functiile C trebuie terminate cu valoarea 0
+    19 00000010 12000000                    numar_mere dd 18
+    20 00000014 4C7563612061726520-         format1 db "Luca are %d mere", 0
+    20 0000001D 2564206D65726500   
+    21                                  
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                          ; ...
+    26 00000000 B811000000                      mov eax, 17
+    27                                          
+    28                                          ;vom apela printf(format, 17) => se va afisa: "Ana are 17 mere"
+    29                                          ;punem parametrii pe stiva de la dreapta la stanga
+    30                                          
+    31 00000005 50                              push dword eax
+    32 00000006 68[00000000]                    push dword format ;! pe stiva se pune adresa string-ului, nu valorea
+    33 0000000B FF15[00000000]                  call [printf]     ;apelam functia printf pentru afisare
+    34 00000011 83C408                          add esp, 4 * 2    ;eliberam parametrii de pe stiva; 4 = dimensiunea unui dword
+    35                                                            ; 2 = nr de parametri
+    36                                                            
+    37 00000014 FF35[10000000]                  push dword [numar_mere]
+    38 0000001A 68[14000000]                    push dword format1
+    39 0000001F FF15[00000000]                  call [printf]
+    40 00000025 83C408                          add esp, 4 * 2
+    41                                      
+    42                                          ; exit(0)
+    43 00000028 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    44 0000002A FF15[00000000]                  call    [exit]       ; call exit to terminate the program

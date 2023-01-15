@@ -1,0 +1,38 @@
+     1                                  ;Se da un sir de caractere format din litere mici
+     2                                  ;Sa se transforme acest sir in sirul literelor mari corespunzatoare
+     3                                  bits 32 ; assembling for the 32 bits architecture
+     4                                  
+     5                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     6                                  global start        
+     7                                  
+     8                                  ; declare external functions needed by our program
+     9                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15                                      ; ...
+    16 00000000 6162636D6E                  sir db 'a', 'b', 'c', 'm', 'n' ;declaram sirul initial s
+    17                                      l equ $-sir                      ;stabilim lungimea sirului initial sir si salvam in l
+    18 00000005 00<rept>                    d times l db 0 ;rezervarea unui spatiu de dimensiune l pentru sir destinatie d si initializarea acestuia
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23                                          ; ...
+    24 00000000 B905000000                      mov ecx, l ;punem lungimea in ECX pentru a putea realiza bucla de ecx ori
+    25 00000005 BE00000000                      mov esi, 0
+    26 0000000A E313                            jecxz Sfarsit ;daca ecx = 0, se face un salt la label-ul Sfarsit
+    27                                          Repeta:
+    28 0000000C 8A86[00000000]                      mov al, [sir + esi]
+    29 00000012 B320                                mov bl, 'a' - 'A' ;pentru a obtine litera mare corespunzatoare literei mici, vom scadea din codul ASCII
+    30 00000014 28D8                                sub al, bl
+    31 00000016 8886[05000000]                      mov [d + esi], al
+    32 0000001C 46                                  inc esi
+    33 0000001D E2ED                            loop Repeta
+    34                                          Sfarsit: ;aici se incheie termina programul
+    35                                      
+    36                                          ; exit(0)
+    37 0000001F 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    38 00000021 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

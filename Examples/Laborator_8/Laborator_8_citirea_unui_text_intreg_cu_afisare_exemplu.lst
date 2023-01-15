@@ -1,0 +1,87 @@
+     1                                  ;Codul de mai jos va deschide fisierul numit "input.txt" din directorul curent si va citi intregul text din acel fisier, in etapte, cate 100 de caractere intr-o etapa
+     2                                  ;Deoarece un fisier text poate fi foarte lung, nu este intotdeauna posibil sa citim fisierul intr-o singura etapa pentru ca nu putem defini un sir de caractere suficient de lung pentru intregul text din fisier. De a
+     3                                  ; Programul va folosi functia fopen pentru deschiderea fisierului, functia fread pentru a citi caracterele, printf pentru afisarea pe ecran, fclose pentru a inchide fisierul
+     4                                  
+     5                                  bits 32 ; assembling for the 32 bits architecture
+     6                                  
+     7                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     8                                  global start        
+     9                                  
+    10                                  ; declare external functions needed by our program
+    11                                  extern exit, fopen, fclose, printf, fread               ; tell nasm that exit exists even if we won't be defining it
+    12                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    13                                  import fopen msvcrt.dll
+    14                                  import fclose msvcrt.dll
+    15                                  import printf msvcrt.dll
+    16                                  import fread msvcrt.dll
+    17                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    18                                  
+    19                                  ; our data is declared here (the variables needed by our program)
+    20                                  segment data use32 class=data
+    21                                      ; ...
+    22 00000000 696E7075742E747874-         nume_fisier db "input.txt", 0 ;numele fisierului care va fi deschis
+    22 00000009 00                 
+    23 0000000A 7200                        mod_acces db "r", 0 ;modul de deschidere a fisierului
+    24                                                          ;r - pentru citire
+    25 0000000C FFFFFFFF                    descriptor_fisier dd -1 ;variabila in care se salveaza descriptorul fisierului - necesar pentru a putea face referire la fisier 
+    26 00000010 00000000                    nr_caractere_citite dd 0 ;variabila in care vom salva numarul de caractere citit din fisier in etapa curenta
+    27                                      len equ 100 ;numarul maxim de elemente citite din fisier intr-o etapa
+    28 00000014 <res 00000064>              buffer resb len ;sirul in care se va citi textul din fisier
+    29 00000078 257300                      format db "%s", 0
+    30                                      
+    31                                  
+    32                                  ; our code starts here
+    33                                  segment code use32 class=code
+    34                                      start:
+    35                                          ; ...
+    36                                          ;apelam functia fopen pentru a deschide fisierul
+    37                                          ;functia va returna in eax descriptorul fisierului
+    38                                          ;eax = fopen(nume_fisier, mod_acces)
+    39 00000000 68[0A000000]                    push dword mod_acces
+    40 00000005 68[00000000]                    push dword nume_fisier
+    41 0000000A FF15[00000000]                  call [fopen]
+    42 00000010 83C408                          add esp, 4 * 2
+    43                                          
+    44                                          ;verificam daca functia fopen a deschis cu succes fisierul, adica eax != 0
+    45 00000013 83F800                          cmp eax, 0
+    46 00000016 744A                            je final
+    47                                          
+    48 00000018 A3[0C000000]                    mov [descriptor_fisier], eax ;salvam valoarea returnata in eax in variabila descriptor_fisier
+    49                                          
+    50                                          bucla:
+    51                                              ;citim o parte (100 caractere) din textul in fisierul deschis, folosind functia fread
+    52                                              ;eax = fread(buffer, 1, len, descriptor_fisier); buffer = ce am citit
+    53 0000001D FF35[0C000000]                      push dword [descriptor_fisier]
+    54 00000023 6A64                                push dword len
+    55 00000025 6A01                                push dword 1
+    56 00000027 68[14000000]                        push dword buffer
+    57 0000002C FF15[00000000]                      call [fread]
+    58 00000032 83C410                              add esp, 4 * 4
+    59                                              
+    60                                              ;eax = numarul de caractere citite
+    61 00000035 83F800                              cmp eax, 0 ;daca numarul de caractere citite este 0, am terminat de parcurs fisierul
+    62 00000038 741A                                je cleanup
+    63                                              
+    64 0000003A A3[10000000]                        mov [nr_caractere_citite], eax ;salvam numarul de caractere citite
+    65                                              
+    66                                              ;afisam pe ecran textul citit cu functia printf
+    67                                              ;printf(buffer, format)
+    68 0000003F 68[78000000]                        push dword format
+    69 00000044 68[14000000]                        push dword buffer
+    70 00000049 FF15[00000000]                      call [printf]
+    71 0000004F 83C408                              add esp, 4 * 2
+    72                                              
+    73                                              ;reluam bucla pentru a citi alt bloc de caractere
+    74 00000052 EBC9                                jmp bucla
+    75                                          
+    76                                      cleanup:
+    77                                      ;apelam functia fclose pentru a inchide fisierul
+    78                                      ;fclose(descriptor_fisier)
+    79 00000054 68[0C000000]                push dword descriptor_fisier
+    80 00000059 FF15[00000000]              call [fclose]
+    81 0000005F 83C404                      add esp, 4
+    82                                      final:
+    83                                      
+    84                                          ; exit(0)
+    85 00000062 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    86 00000064 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

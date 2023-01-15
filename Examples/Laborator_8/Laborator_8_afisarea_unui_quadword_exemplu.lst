@@ -1,0 +1,32 @@
+     1                                  ;Programul afiseaza un quadword pe ecran
+     2                                  bits 32 ; assembling for the 32 bits architecture
+     3                                  
+     4                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     5                                  global start        
+     6                                  
+     7                                  ; declare external functions needed by our program
+     8                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     9                                  extern printf
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    13                                  
+    14                                  ; our data is declared here (the variables needed by our program)
+    15                                  segment data use32 class=data
+    16                                      ; ...
+    17 00000000 00D265788B110100            a dq 300765694775808
+    18 00000008 256C6C6400                  format db "%lld", 0
+    19                                  
+    20                                  ; our code starts here
+    21                                  segment code use32 class=code
+    22                                      start:
+    23                                          ; ...
+    24 00000000 FF35[04000000]                  push dword [a+4]
+    25 00000006 FF35[00000000]                  push dword [a]
+    26 0000000C 68[08000000]                    push dword format
+    27 00000011 FF15[00000000]                  call [printf]
+    28 00000017 83C40C                          add esp, 4 * 3
+    29                                      
+    30                                          ; exit(0)
+    31 0000001A 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    32 0000001C FF15[00000000]                  call    [exit]       ; call exit to terminate the program

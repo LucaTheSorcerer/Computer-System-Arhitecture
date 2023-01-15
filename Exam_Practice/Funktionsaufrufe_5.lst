@@ -1,0 +1,84 @@
+     1                                  ;Lese zwei Zahlen a und b in der Basis 16 von der Tastatur und berechne a + b.
+     2                                  ;Zeige das Ergebniss in Basis 16
+     3                                  bits 32 ; assembling for the 32 bits architecture
+     4                                  
+     5                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     6                                  global start        
+     7                                  
+     8                                  ; declare external functions needed by our program
+     9                                  extern exit, scanf, printf               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                  import scanf msvcrt.dll
+    13                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    14                                  
+    15                                  ; our data is declared here (the variables needed by our program)
+    16                                  segment data use32 class=data
+    17                                      ; ...
+    18 00000000 00000000                    a dd 0
+    19 00000004 00000000                    b dd 0
+    20 00000008 257800                      hex_format db "%x", 0
+    21 0000000B 61203D2000                  message_a db "a = ", 0
+    22 00000010 62203D2000                  message_b db "b = ", 0
+    23 00000015 61202B2062203D2025-         result_format db `a + b = %d \n`, 0
+    23 0000001E 64200A00           
+    24 00000022 2564202B202564203D-         result_format1 db "%d + %d = %d", 0
+    24 0000002B 20256400           
+    25                                  
+    26                                  ; our code starts here
+    27                                  segment code use32 class=code
+    28                                      start:
+    29                                          ; ...
+    30                                          ;folosim printf pentru a arata message_a pe ecran
+    31                                          ;printf(message_a)
+    32 00000000 68[0B000000]                    push dword message_a
+    33 00000005 FF15[00000000]                  call [printf]
+    34 0000000B 83C404                          add esp, 4
+    35                                          
+    36                                          ;folosim scanf pentru a citi numarul a de la tastatura
+    37                                          ;scanf(hex_format, a)
+    38 0000000E 68[00000000]                    push dword a
+    39 00000013 68[08000000]                    push dword hex_format
+    40 00000018 FF15[00000000]                  call [scanf]
+    41 0000001E 83C408                          add esp, 4 * 2
+    42                                          
+    43                                          ;folosim printf pentru a arata message_b pe ecran
+    44                                          ;printf(message_b)
+    45 00000021 68[10000000]                    push dword message_b
+    46 00000026 FF15[00000000]                  call [printf]
+    47 0000002C 83C404                          add esp, 4
+    48                                          
+    49                                          ;folosim scanf pentru a citi numarul b de la tastatura
+    50                                          ;scanf(hex_format, b)
+    51 0000002F 68[04000000]                    push dword b
+    52 00000034 68[08000000]                    push dword hex_format
+    53 00000039 FF15[00000000]                  call [scanf]
+    54 0000003F 83C408                          add esp, 4 * 2
+    55                                          
+    56                                          ;facem adunarea a + b si o salvam in eax
+    57 00000042 A1[00000000]                    mov eax, [a]
+    58 00000047 0305[04000000]                  add eax, [b]
+    59                                          
+    60                                          ;folosim functia printf pentru a afisa pe ecran result_format si rezultatul adunarii din eax
+    61                                          ;printf(result_format, eax)
+    62 0000004D 50                              push dword eax
+    63 0000004E 68[15000000]                    push dword result_format
+    64 00000053 FF15[00000000]                  call [printf]
+    65 00000059 83C408                          add esp, 4 * 2
+    66                                          
+    67 0000005C BB00000000                      mov ebx, 0
+    68 00000061 8B1D[00000000]                  mov ebx, [a]
+    69 00000067 031D[04000000]                  add ebx, [b]
+    70                                          
+    71                                          ;printf(result_format1, a, b, ebx)
+    72 0000006D 53                              push dword ebx
+    73 0000006E FF35[04000000]                  push dword [b]
+    74 00000074 FF35[00000000]                  push dword [a]
+    75 0000007A 68[22000000]                    push dword result_format1
+    76 0000007F FF15[00000000]                  call [printf]
+    77 00000085 83C410                          add esp, 4 * 4
+    78                                          
+    79                                      
+    80                                          ; exit(0)
+    81 00000088 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    82 0000008A FF15[00000000]                  call    [exit]       ; call exit to terminate the program
