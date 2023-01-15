@@ -1,0 +1,94 @@
+     1                                  ;Lese eine Dateinamen und einen Text von der Tastatur.
+     2                                  ;Erstelle eine Datei mit diesem Namen im akutellen Ordner und schreibe den
+     3                                  ;gelesenen Text in  der Datei.
+     4                                  ;Der Dateiname hat maximal 30 Zeichnen. Der Text hat maximal 120 Zeichnen
+     5                                  bits 32 ; assembling for the 32 bits architecture
+     6                                  
+     7                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     8                                  global start        
+     9                                  
+    10                                  ; declare external functions needed by our program
+    11                                  extern exit, fclose, fopen, fprintf, scanf, printf, gets               ; tell nasm that exit exists even if we won't be defining it
+    12                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    13                                  import fopen msvcrt.dll
+    14                                  import fclose msvcrt.dll
+    15                                  import printf msvcrt.dll
+    16                                  import scanf msvcrt.dll
+    17                                  import fprintf msvcrt.dll
+    18                                  import gets msvcrt.dll
+    19                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    20                                  
+    21                                  ; our data is declared here (the variables needed by our program)
+    22                                  segment data use32 class=data
+    23                                      ; ...
+    24 00000000 257300                      string_format db "%s", 0
+    25 00000003 46696C65203D2000            message_file_name db "File = ", 0
+    26 0000000B 54657874203D2000            message_text db "Text = ", 0
+    27                                      
+    28 00000013 00<rept>                    file_name times 30 db 0
+    29 00000031 00<rept>                    text times 120 db 0
+    30 000000A9 7700                        acces_mode db "w", 0
+    31 000000AB FFFFFFFF                    file_descriptor dd -1
+    32                                  
+    33                                  ; our code starts here
+    34                                  segment code use32 class=code
+    35                                      start:
+    36                                          ; ...
+    37                                          ;folosim functia printf pentru a afisa pe ecran message_file_name
+    38                                          ;printf(message_file_name)
+    39 00000000 68[03000000]                    push dword message_file_name
+    40 00000005 FF15[00000000]                  call [printf]
+    41 0000000B 83C404                          add esp, 4
+    42                                          
+    43                                          ;folosim functia scanf pentru a citi de la tastatura file_name
+    44                                          ;scanf(string_format, file_name)
+    45 0000000E 68[13000000]                    push dword file_name
+    46 00000013 68[00000000]                    push dword string_format
+    47 00000018 FF15[00000000]                  call [scanf]
+    48 0000001E 83C408                          add esp, 4 * 2
+    49                                          
+    50                                          ;folosim functia printf pentru a afisa pe ecran message_text
+    51                                          ;printf(message_text)
+    52 00000021 68[0B000000]                    push dword message_text
+    53 00000026 FF15[00000000]                  call [printf]
+    54 0000002C 83C404                          add esp, 4
+    55                                          
+    56                                          ;folosim functia scanf pentru a citi de la tastatura textul
+    57                                          ;scanf(string_format, text)
+    58 0000002F 68[31000000]                    push dword text
+    59 00000034 68[00000000]                    push dword string_format
+    60 00000039 FF15[00000000]                  call [scanf]
+    61 0000003F 83C408                          add esp, 4 * 2
+    62                                          
+    63                                          ;folosim functia fopen pentru a deschide fisierul file_name cu modul w si a-l crea
+    64                                          ;fopen(file_name, acces_mode)
+    65 00000042 68[A9000000]                    push dword acces_mode
+    66 00000047 68[13000000]                    push dword file_name
+    67 0000004C FF15[00000000]                  call [fopen]
+    68 00000052 83C408                          add esp, 4 * 2
+    69                                          
+    70 00000055 83F800                          cmp eax, 0
+    71 00000058 7419                            je final
+    72                                          
+    73 0000005A A3[AB000000]                    mov [file_descriptor], eax
+    74                                         
+    75                                          
+    76                                          ;folosim functia fprintf pentru a scrie in fisier textul
+    77                                          ;fprintf(file_descriptor, text)
+    78 0000005F 68[31000000]                    push dword text
+    79 00000064 FF35[AB000000]                  push dword [file_descriptor]
+    80 0000006A FF15[00000000]                  call [fprintf]
+    81 00000070 83C408                          add esp, 4 * 2
+    82                                          
+    83                                          
+    84                                          
+    85                                      final:
+    86                                          ;folosim functia fclose pentru a inchide fisierul
+    87                                          ;fclose(file_descriptor)
+    88 00000073 FF35[AB000000]                  push dword [file_descriptor]
+    89 00000079 FF15[00000000]                  call [fclose]
+    90 0000007F 83C404                          add esp, 4
+    91                                      
+    92                                          ; exit(0)
+    93 00000082 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    94 00000084 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
